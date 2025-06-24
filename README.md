@@ -12,7 +12,7 @@
 [Click here to download three deepseek-math folder](https://drive.google.com/drive/folders/1xt8L3lgNJeakXneSL71Nk-NECKxhnXzP)  
 
 ### Implementation （Training） 
-1. Use `python OPRO.py` or `ORPO_better.py`  
+1. Use `python OPRO.py` or `python ORPO_better.py`  
 
 ### Implementation （Inference） 
 1. Please download the Model Weights for inference.  
