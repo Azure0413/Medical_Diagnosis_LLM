@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>醫學 AI 診斷助手</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status.loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.ready {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #34495e;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .button-group {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .result h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .medical-advice {
+            background-color: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+        .stats {
+            background-color: #f1f3f4;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            color: #5f6368;
+            margin-top: 15px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .examples {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .examples h4 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .example {
+            background-color: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .example:hover {
+            background-color: #f0f8ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 醫學 AI 診斷助手</h1>
+        
+        <div id="status" class="status loading">
+            ⏳ 模型載入中，請稍候...
+        </div>
+
+        <div class="examples">
+            <h4>💡 範例病例（點擊使用）：</h4>
+            <div class="example" onclick="fillExample(this)">
+                65歲女性患者，糖尿病史15年，最近出現胸悶、呼吸困難，特別是活動時加重。心電圖顯示ST段壓低。請問可能的診斷和處理建議？
+            </div>
+            <div class="example" onclick="fillExample(this)">
+                40歲男性，右上腹疼痛2天，伴發燒38.5°C，噁心嘔吐。體檢發現右上腹壓痛，Murphy's sign陽性。請問診斷和治療建議？
+            </div>
+            <div class="example" onclick="fillExample(this)">
+                55歲男性，終末期腎病，血液透析3年，每週3次。最近兩週透析中頻繁頭暈、噁心，血壓最低80/50 mmHg。請問可能的原因和處理方式？
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="patientCase">📝 請輸入病例描述：</label>
+            <textarea id="patientCase" placeholder="請詳細描述患者的症狀、病史、檢查結果等資訊..."></textarea>
+        </div>
+
+        <div class="button-group">
+            <button id="submitBtn" onclick="submitCase()" disabled>🔍 開始分析</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            🤖 AI 正在分析病例，請稍候...
+        </div>
+
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // 檢查模型狀態
+        function checkModelStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById('status');
+                    const submitBtn = document.getElementById('submitBtn');
+                    
+                    if (data.model_loaded) {
+                        statusDiv.className = 'status ready';
+                        statusDiv.innerHTML = '✅ 模型已就緒，可以開始診斷';
+                        submitBtn.disabled = false;
+                    } else {
+                        statusDiv.className = 'status loading';
+                        statusDiv.innerHTML = '⏳ 模型載入中，請稍候...';
+                        submitBtn.disabled = true;
+                        setTimeout(checkModelStatus, 2000); // 2秒後再檢查
+                    }
+                })
+                .catch(error => {
+                    console.error('檢查模型狀態失敗:', error);
+                    setTimeout(checkModelStatus, 5000); // 5秒後重試
+                });
+        }
+
+        // 填入範例
+        function fillExample(element) {
+            document.getElementById('patientCase').value = element.textContent.trim();
+        }
+
+        // 提交病例
+        function submitCase() {
+            const patientCase = document.getElementById('patientCase').value.trim();
+            
+            if (!patientCase) {
+                alert('請輸入病例描述');
+                return;
+            }
+
+            // 顯示載入狀態
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+
+            // 發送請求
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    patient_case: patientCase
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showResult(data);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                showError('網路請求失敗: ' + error.message);
+            });
+        }
+
+        // 顯示結果
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <h3>🎯 最終醫學建議：</h3>
+                <div class="medical-advice">${data.final_response}</div>
+                <div class="stats">
+                    📊 統計資訊：
+                    生成時間：${data.generation_time} 秒 | 
+                    第一步 Token：${data.first_step_tokens} | 
+                    第二步 Token：${data.second_step_tokens}
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        // 顯示錯誤
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="error">❌ ${message}</div>`;
+            resultDiv.style.display = 'block';
+        }
+
+        // 頁面載入時檢查模型狀態
+        window.onload = function() {
+            checkModelStatus();
+        };
+
+        // Enter 鍵提交（Ctrl+Enter）
+        document.getElementById('patientCase').addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                submitCase();
+            }
+        });
+    </script>
+</body>
+</html>
