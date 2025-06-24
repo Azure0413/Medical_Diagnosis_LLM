@@ -17,6 +17,7 @@
 ### Implementation （Inference） 
 1. Please download the Model Weights for inference.  
 2. Use `python app.py` to open the website.  
+
 if you only want to inference to check the model output in the terminal, Use `python inference.py`.
 
 ###  Resource（My Slide）    
